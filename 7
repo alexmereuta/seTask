@@ -1,0 +1,67 @@
+require 'watir'
+require 'selenium-webdriver'
+require 'json'
+require 'win32ole'
+
+caps = Selenium::WebDriver::Remote::Capabilities.chrome(:chrome_options => {detach: true})
+Selenium::WebDriver::Chrome.driver_path="C:/Users/test/Downloads/chromedriver_win32/chromedriver.exe"
+browser = Watir::Browser.new :chrome,  desired_capabilities: caps
+
+browser.goto 'https://personal.maib.md/BankFlexPB/(S(2opjuegqxbru4b5s5getamzp))/login.aspx?locale=ro-RO'
+browser.text_field(id: 'UserId').set 'amereuta1995'
+browser.text_field(id: 'Password').set 'password'
+browser.button(id: 'loginbutton').click
+accountInfo = []
+accountInfo << browser.tr(class: 'gridAltRowStyle').text.split
+browser.img(id: 'btnMenu').click
+browser.a(class: 'MenuTreeView_0 treenode MenuTreeView_1').click
+browser.element(:xpath => "//*[@id='MenuTreeViewn2']").click
+browser.select(:id, "aspx_accountinformation_accountstatementsearch_ascxTRANSACTION_HISTORYd140773f-5491-4ec7-903b-1b7dea9aaf86$ddlAccount")
+# browser.option(:text,'22592344531-472-MDL').click
+browser.select_list().options[1].select
+browser.text_field(:id, 'txtfromDate').clear
+browser.text_field(:id, 'txtfromDate').set '11.10.2017'
+browser.text_field(:id, 'txtToDate').clear
+browser.text_field(:id, 'txtToDate').set '10.11.2017'
+browser.button(:value, 'Transmite').click
+browser.input(:value, 'xls').click
+browser.input(:value, 'Descărcare').click
+browser.a(:id, 'download').click
+
+xl = WIN32OLE.new('excel.application')
+wrkbook= xl.Workbooks.Open('C:\Users\test\Downloads\22592344531.xls')
+
+wrksheet= wrkbook.Worksheets(1)
+wrksheet.Select
+
+description= []
+date= []
+amount= []
+date = wrksheet.Range("b21:b34").Value
+description = wrksheet.Range("f21:f34").Value
+amount = wrksheet.Range("g21:g34").Value
+transactions = []
+transactions << date + description + amount
+
+class Transaction
+  attr_reader :date, :description, :amount
+
+  def initialize(date, description, amount)
+    @date = date
+    @description = description
+    @amount = amount
+  end
+end
+
+transactions = transactions.flatten
+trs = []
+transactions.each do |transactions|
+  trs << Transaction.new(date[0], description[1], amount[2])
+end
+
+
+accountInfo = accountInfo.map{|s| {Nature: s[0], Name: s[1], Curency: s[3], Balance: s[4]}}
+transactionList = []
+transactionList =  accountInfo + trs
+print transactionList.to_json
+browser.quit

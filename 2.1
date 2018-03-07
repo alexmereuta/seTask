@@ -1,0 +1,13 @@
+require 'watir'
+require 'selenium-webdriver'
+
+caps = Selenium::WebDriver::Remote::Capabilities.chrome(:chrome_options => {detach: true})
+Selenium::WebDriver::Chrome.driver_path="C:/Users/test/Downloads/chromedriver_win32/chromedriver.exe"
+browser = Watir::Browser.new :chrome,  desired_capabilities: caps
+
+
+browser.goto 'https://personal.maib.md/BankFlexPB/(S(2opjuegqxbru4b5s5getamzp))/login.aspx?locale=ro-RO'
+browser.text_field(id: 'UserId').set 'amereuta1995'
+browser.text_field(id: 'Password').set 'password'
+browser.button(id: 'loginbutton').click
+# browser.quit
